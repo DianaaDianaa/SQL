@@ -1,0 +1,415 @@
+--CREATE TABLES
+CREATE TABLE SephoraStores
+(StoreID INT PRIMARY KEY not null, 
+Store VARCHAR(40), 
+City VARCHAR(40), 
+StreetNo VARCHAR(40))
+
+CREATE TABLE Products
+(ProductID INT PRIMARY KEY not null, 
+ProductName VARCHAR(40), 
+Stock INT, 
+Price INT)
+
+
+CREATE TABLE LoyalCustomers
+(ClientID INT PRIMARY KEY not null, 
+ClientName VARCHAR(40), 
+PhoneNumber INT, 
+Birthday DATE)
+ALTER TABLE LoyalCustomers
+ADD GiftID INT FOREIGN KEY REFERENCES Gifts(GiftID);
+ALTER TABLE LoyalCustomers
+ADD StoreID INT FOREIGN KEY REFERENCES SephoraStores(StoreID);
+
+
+CREATE TABLE Brands
+(BrandID INT PRIMARY KEY not null, 
+BrandName VARCHAR(40), 
+Rating INT)
+
+
+CREATE TABLE Promos
+(PromoID INT PRIMARY KEY not null, 
+Discount INT,
+StartDate DATE,
+EndDate DATE
+ )
+ALTER TABLE Promos
+ADD ProductID INT;
+ALTER TABLE Promos
+ADD FOREIGN KEY (ProductID) REFERENCES Products(ProductID);
+ALTER TABLE Promos
+ADD UNIQUE (ProductID);
+
+
+
+CREATE TABLE ProductsBoughtByClients
+(ProductID int FOREIGN KEY REFERENCES Products(ProductID) not null,
+ClientID int FOREIGN KEY REFERENCES LoyalCustomers(ClientID) not null,
+TransactionDate DATE, 
+PRIMARY KEY (ProductID, ClientID))
+
+CREATE TABLE ProductsInStores
+(ProductID int FOREIGN KEY REFERENCES Products(ProductID) not null,
+StoreID int FOREIGN KEY REFERENCES SephoraStores(StoreID) not null,
+Stock INT, 
+PRIMARY KEY (ProductID, StoreID))
+
+
+
+CREATE TABLE Employees
+(EmployeeID INT unique,
+StoreID int FOREIGN KEY REFERENCES SephoraStores(StoreID) not null,
+EmployeeName VARCHAR(40),
+PhoneNumber INT,
+PRIMARY KEY (EmployeeID, StoreID))
+
+
+
+CREATE TABLE Gifts
+(GiftID INT PRIMARY KEY not null,
+ProductID int FOREIGN KEY REFERENCES Products(ProductID) not null,
+Discount INT)
+
+
+
+
+ CREATE TABLE Products
+(ProductID INT PRIMARY KEY not null, 
+ProductName VARCHAR(40), 
+Stock INT, 
+Price INT)
+ALTER TABLE Products
+ADD BrandID INT
+
+
+
+CREATE TABLE Brands
+(BrandID INT PRIMARY KEY not null, 
+BrandName VARCHAR(40), 
+Rating INT)
+
+
+--INSERT VALUES
+INSERT INTO SephoraStores
+VALUES (1, 'SeMS', 'Targu Mures', 'Bulevardul 1 Decembrie');
+INSERT INTO SephoraStores
+VALUES (2, 'SeCJ', 'Cluj', 'Alexandru Vaida 53-55');
+INSERT INTO SephoraStores
+VALUES (3, 'SeB', 'Bucuresti', 'Bulevardul Timișoara 26');
+INSERT INTO SephoraStores
+VALUES (4, 'SeAR', 'Arad', 'Aurel Vlaicu 10-12');
+
+
+INSERT INTO Employees
+VALUES (1, 2, 'AnnaScott', 391028);
+INSERT INTO Employees
+VALUES (2, 2, 'JohnMax', 193083);
+INSERT INTO Employees
+VALUES (3, 4, 'MarkGray', 455628);
+INSERT INTO Employees
+VALUES (4, 2, 'LauraMay', 891002);
+
+--statement that violates referential integrity constraints
+--the store id 5 is not valid
+INSERT INTO Employees
+VALUES (1, 5, 'AnnaScott', 391028);
+
+
+INSERT INTO Products
+VALUES (1, 'GlamPalette', 14, 381);
+INSERT INTO Products
+VALUES (2, 'CreamLipStain', 5, 65);
+INSERT INTO Products
+VALUES (3, 'Donna', 5, 726);
+INSERT INTO Products
+VALUES (4, 'NinaFleur', 11, 245);
+
+
+INSERT INTO Gifts
+VALUES (1, 2, 14);
+INSERT INTO Gifts
+VALUES (2, 2, 65);
+INSERT INTO Gifts
+VALUES (3, 1, 50);
+
+
+INSERT INTO LoyalCustomers
+VALUES (7, 'LauraLee', 501822, '2002-11-11', 1, 1);
+
+INSERT INTO LoyalCustomers
+VALUES (4, 'BranWalsh', 536781, '2000-11-11', 3, 3);
+INSERT INTO LoyalCustomers
+VALUES (5, 'EdwardGilbert', 222134, '2002-09-03', 2, 2);
+INSERT INTO LoyalCustomers
+VALUES (6, 'BranWalsh', 778110, '1991-12-07', 2, 3);
+
+
+
+UPDATE Products
+SET Price=200
+WHERE Stock > 4 AND Stock < 12;
+UPDATE Products
+SET Price=400
+WHERE Stock = 14 OR Stock <= 5;
+UPDATE Brands
+SET Rating = 10
+WHERE BrandID = 1;
+
+DELETE FROM Products WHERE Category IS NULL;
+
+
+DELETE FROM Products WHERE Stock BETWEEN 8 AND 12;
+
+
+DELETE FROM SephoraStores WHERE City IN ('Bucuresti','Constanta');
+
+
+DELETE FROM Employees WHERE EmployeeName LIKE 'a%';
+DELETE FROM Products WHERE NOT Stock <> 5;
+
+ALTER TABLE Products
+ADD BrandID INT FOREIGN KEY REFERENCES Brands(BrandID);
+
+
+
+INSERT INTO Brands
+VALUES (1, 'MOROCCANOIL', 9);
+INSERT INTO Products
+VALUES (5, 'Moisture Repair Shampoo', 3, 127, 1);
+INSERT INTO Products
+VALUES (6, 'Intense Hydrating Mask', 7, 200, 1);
+INSERT INTO Brands
+VALUES (3, 'TRUSSARDI', 8);
+INSERT INTO Products
+VALUES (7, 'Betisoare Parfumate', 11, 130, 2);
+INSERT INTO Products
+VALUES (10, 'Betisoare Parfumate', 11, 130, 2, NULL);
+
+
+
+INSERT INTO Employees
+VALUES (1, 2, 'AnnaScott', NULL);
+DELETE FROM Employees WHERE PhoneNumber IS NULL;
+
+
+--a) 2 queries with the union operation; use UNION [ALL] and OR;
+
+--returns the cities from both the clients and the employees table
+SELECT S.StoreID 
+FROM SephoraStores S, Employees E
+WHERE S.StoreID = E.StoreID
+UNION
+SELECT L.StoreID 
+FROM SephoraStores S1, LoyalCustomers L
+WHERE S1.StoreID = L.StoreID
+
+--returns the products which have the price between 250 and 450 lei
+SELECT P.ProductName, P.Price
+FROM Products P
+WHERE P.Price < 250 OR P.Price > 450;
+
+
+--b) 2 queries with the intersection operation; use INTERSECT and IN;
+
+--returns the stores in which there are both clients and employees in the data base
+SELECT S.StoreID
+FROM SephoraStores S, Employees E
+WHERE S.StoreID = E.StoreID
+INTERSECT
+SELECT S1.StoreID
+FROM SephoraStores S1, LoyalCustomers L
+WHERE S1.StoreID = L.StoreID;
+
+
+SELECT S.StoreID
+FROM SephoraStores S
+WHERE S.City IN ('Cluj', 'Bucuresti')
+
+
+--c) 2 queries with the difference operation; use EXCEPT and NOT IN;
+
+--returns all the products that are not also gifts
+SELECT P.ProductID
+FROM Products P
+EXCEPT
+SELECT G.ProductID
+FROM Gifts G
+
+SELECT L.ClientName, L.StoreID
+FROM LoyalCustomers L
+WHERE L.StoreID NOT IN 
+( SELECT S.StoreID
+  FROM SephoraStores S
+  WHERE S.City IN ('Cluj', 'Bucuresti') 
+)
+
+
+
+
+--d) 4 queries with INNER JOIN, LEFT JOIN, RIGHT JOIN, and FULL 
+--  JOIN (one query per operator); one query will join at least 3 tables, 
+--  while another one will join at least two many-to-many relationships;
+
+SELECT DISTINCT TOP 2 S.StoreID, E.EmployeeName
+FROM SephoraStores S
+INNER JOIN Employees E ON S.StoreID=E.StoreID;
+
+
+SELECT G.GiftID, G.Discount, P.ProductName, L.ClientName
+FROM Gifts G
+RIGHT JOIN LoyalCustomers L
+ON L.GiftID = G.GiftID
+RIGHT JOIN Products P
+ON P.ProductID = G.ProductID;
+
+
+
+SELECT TOP 5 G.GiftID, G.Discount, P.ProductName
+FROM Gifts G
+FULL JOIN Products P
+ON P.ProductID = G.ProductID
+
+
+SELECT G.GiftID, L.ClientName
+FROM Gifts G
+LEFT JOIN LoyalCustomers L
+ON G.GiftID = L.GiftID;
+
+
+--e) 2 queries with the IN operator and a subquery in the WHERE clause; in at least one case, the subquery must include a subquery in its own WHERE clause;
+
+--return the customers whose gifts have a discount between 20 and 55
+SELECT DISTINCT L.ClientName
+FROM LoyalCustomers L
+WHERE L.GiftID IN 
+(
+SELECT G.GiftID
+FROM Gifts G
+WHERE G.Discount > 20 AND G.Discount < 55
+)
+
+
+--return the brands whose products are gifts 
+SELECT  B.BrandID, B.BrandName
+FROM Brands B
+WHERE B.BrandID IN
+( 
+SELECT P.BrandID
+FROM Products P
+WHERE P.ProductID in
+( 
+SELECT G.ProductID
+FROM Gifts G
+)
+)
+
+
+--f)  2 queries with the EXISTS operator and a subquery in the WHERE clause;
+
+--returns the clients who have gifts with the discount greater than 20
+SELECT L.ClientName
+FROM LoyalCustomers L
+WHERE EXISTS
+(
+SELECT *
+FROM Gifts G
+WHERE G.Discount > 20 AND L.GiftID = G.GiftID
+)
+
+
+--returns the stores that have employees in the database
+SELECT S.StoreID
+FROM SephoraStores S
+WHERE EXISTS
+( 
+SELECT *
+FROM Employees E
+WHERE E.StoreID = S.StoreID
+)
+
+
+--g) 2 queries with a subquery in the FROM clause; 
+
+--return the products that have the total stock greater than the average stock in stores
+select distinct P.ProductID, P.ProductName, P.Stock, S.StockAvg from
+(select AVG(Stock) as StockAvg from ProductsInStores) as S, Products as P
+where P.Stock > S.StockAvg;
+
+
+--returns the products whose prices after the promotion's discount are higher than 200
+select distinct P.ProductName, P.Price - P.Price*D.Discount/100 AS "Price After Discount"
+from
+(select Discount, ProductID from Promos) as D, Products as P
+where P.ProductID = D.ProductID AND (P.Price - P.Price*D.Discount/100) > 200;
+
+
+--h) 4 queries with the GROUP BY clause, 3 of which also contain the HAVING clause; 
+--   2 of the latter will also have a subquery in the HAVING clause; use the aggregation operators: COUNT, SUM, AVG, MIN, MAX;
+
+--returns how many loyal clients are subscribed to which store 
+SELECT COUNT(ClientID) as NoOfClients, StoreID
+FROM LoyalCustomers
+GROUP BY StoreID;
+
+--returns how many products belong to a certain category that has at least two products
+SELECT Count(ProductID) as NoOfProducts, Category
+FROM Products
+GROUP BY Category 
+HAVING Count(ProductID) > Min(BrandID) OR Count(ProductID) > Max(BrandID);
+
+--returns the products whose price is greater than the avg price (300) 
+SELECT Count(ProductID), Category, Price
+FROM Products 
+GROUP BY Category, Price
+HAVING Price > ( SELECT Avg(Price) FROM Products)
+Order BY Price DESC;
+
+--return the products whose prices are higher than the sum of the stocks
+SELECT Count(ProductID), Price
+FROM Products
+GROUP BY Price, Stock
+HAVING Price > ( SELECT SUM(Stock) FROM Products)
+ORDER BY Stock;
+
+
+--i) 4 queries using ANY and ALL to introduce a subquery 
+--   in the WHERE clause (2 queries per operator); rewrite 2 of them with aggregation operators, and the other 2 with IN / [NOT] IN.
+
+--returns all the gifts that have the discount greater than the lowest discount of the product with id 2
+SELECT *
+FROM Gifts G
+WHERE G.Discount > ANY
+( SELECT G2.Discount
+  FROM GIFTS G2
+  WHERE G2.ProductID = 2
+)
+
+--returns all the gifts that have the discount greater than the highest discount of the product with id 2
+SELECT *
+FROM Gifts G
+WHERE G.Discount > ALL
+( SELECT G2.Discount
+  FROM GIFTS G2
+  WHERE G2.ProductID = 1
+)
+
+
+--returns the products whose prices are higher than the lowest product's price in the makeup category 
+SELECT *
+FROM Products P
+WHERE P.Price > ANY
+( SELECT P2.Price
+  FROM Products P2
+  WHERE P2.Category = 'Makeup'
+)
+
+--returns the products whose prices are higher than the highest product's price in the makeup category 
+SELECT *
+FROM Products P
+WHERE P.Price > ALL
+( SELECT P2.Price
+  FROM Products P2
+  WHERE P2.Category = 'Makeup'
+)
